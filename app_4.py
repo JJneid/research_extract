@@ -119,9 +119,9 @@ def initialize_session_state():
 def get_client(provider):
     """Initialize and return the appropriate client based on the selected provider."""
     if provider == "OpenAI":
-        return OpenAI(api_key=st.session_state.openai_api_key)
+        return OpenAI(api_key=st.session_state.api_keys['openai'])
     elif provider == "Anthropic":
-        return Anthropic(api_key=st.session_state.anthropic_api_key)
+        return Anthropic(api_key=st.session_state.api_keys['anthropic'])
     elif provider == "Llama":
         return OpenAI(base_url="http://3.15.181.146:8000/v1/", api_key='None')
     else:
@@ -290,22 +290,35 @@ def main():
             key="model"
         )
     
+    # Initialize API keys in session state if not present
+    if 'api_keys' not in st.session_state:
+        st.session_state.api_keys = {
+            'openai': '',
+            'anthropic': ''
+        }
+    
     # API key input if required
     if MODELS[provider]["requires_key"]:
-        api_key = st.text_input(
-            f"Enter your {provider} API key:",
-            type="password",
-            key=f"{provider.lower()}_api_key"
-        )
+        if provider == "OpenAI":
+            api_key = st.text_input(
+                "Enter your OpenAI API key:",
+                type="password",
+                key="openai_key_input",
+                value=st.session_state.api_keys['openai']
+            )
+            st.session_state.api_keys['openai'] = api_key
+        elif provider == "Anthropic":
+            api_key = st.text_input(
+                "Enter your Anthropic API key:",
+                type="password",
+                key="anthropic_key_input",
+                value=st.session_state.api_keys['anthropic']
+            )
+            st.session_state.api_keys['anthropic'] = api_key
         
         if not api_key:
             st.warning(f"Please enter your {provider} API key to proceed.")
             return
-        
-        if provider == "OpenAI":
-            st.session_state.openai_api_key = api_key
-        elif provider == "Anthropic":
-            st.session_state.anthropic_api_key = api_key
     
     # Category Management
     manage_categories()
